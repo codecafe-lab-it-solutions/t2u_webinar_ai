@@ -1,26 +1,205 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-ground: #171421;
+  --color-surface: #1e1a2c;
+  --color-card: #221d33;
+  --color-card-hover: #281f3d;
+  --color-border: rgba(255, 255, 255, 0.12);
+  --color-border-strong: rgba(255, 255, 255, 0.2);
+
+  --color-text: #f6f4fb;
+  --color-text-muted: #a79fc0;
+  --color-text-faint: #736a8c;
+
+  --color-brand-primary: #7c3aed;
+  --color-brand-primary-hover: #8b4bf5;
+  --color-brand-accent: #f97316;
+  --color-gradient-start: #ff7a00;
+  --color-gradient-end: #ffd700;
+
+  --color-success: #10b981;
+  --color-warning: #d97706;
+  --color-error: #e11d48;
+  --color-info: #3b82f6;
+
+  --radius-sm: 8.4px;
+  --radius-md: 11.2px;
+  --radius-lg: 14px;
+  --radius-xl: 19.6px;
+  --radius-2xl: 25.2px;
+  --radius-3xl: 30.8px;
+
+  --font-sans: var(--font-plus-jakarta), Poppins, Inter, ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@media (prefers-reduced-motion: reduce) {
+  /* Excluded rather than reverted afterward: `revert` rolls back past ALL
+     author styles to the UA default (duration 0s / count 1) — the same
+     dead state we're trying to avoid — so this has to never match the
+     blanket selector in the first place. It's pure color drift with no
+     spatial motion or flashing, not what this rule guards against. */
+  *:not(.text-gradient-animate),
+  ::before,
+  ::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
   }
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-ground);
+  color: var(--color-text);
+  font-size: 18px;
+  line-height: 1.6;
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+@media (min-width: 768px) {
+  body {
+    font-size: 20px;
+  }
+}
+
+/* ---------- Layout primitives ---------- */
+/* These aren't Tailwind utilities — the page components rely on them for
+   section rhythm, so they need real rules, not just a class name. */
+.container {
+  max-width: 1180px;
+  margin-inline: auto;
+  padding-inline: 20px;
+}
+
+.section {
+  padding-block: 88px;
+}
+@media (max-width: 767px) {
+  .section {
+    padding-block: 56px;
+  }
+}
+
+.section-head {
+  max-width: 720px;
+  margin: 0 auto 44px;
+  text-align: center;
+}
+.section-head::before {
+  content: "";
+  display: block;
+  width: 40px;
+  height: 3px;
+  margin: 0 auto 16px;
+  border-radius: 999px;
+  background-image: linear-gradient(90deg, var(--color-gradient-start), var(--color-gradient-end));
+}
+.section-head h2 {
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 700;
+  margin-top: 10px;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+.section-head p {
+  color: var(--color-text-muted);
+  margin-top: 12px;
+}
+
+/* ---------- Text & labels ---------- */
+.text-gradient {
+  background-image: linear-gradient(90deg, var(--color-gradient-start), var(--color-gradient-end));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.kicker {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-brand-accent);
+}
+
+.field-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-faint);
+  margin-bottom: 6px;
+}
+
+/* ---------- Buttons ---------- */
+.btn-primary {
+  background-image: linear-gradient(135deg, var(--color-brand-primary), #6d28d9);
+  color: #fff;
+  box-shadow: 0 0 0 1px rgba(124, 58, 237, 0.4), 0 10px 24px -10px rgba(124, 58, 237, 0.55);
+  transition: box-shadow 0.25s ease, transform 0.15s ease, background-image 0.25s ease;
+}
+.btn-primary:hover {
+  background-image: linear-gradient(135deg, var(--color-brand-primary-hover), var(--color-brand-primary));
+  box-shadow: 0 0 0 1px rgba(124, 58, 237, 0.55), 0 0 28px rgba(249, 115, 22, 0.55);
+  transform: translateY(-2px);
+}
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+/* ---------- Card interaction ---------- */
+.glow-card {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, box-shadow 0.25s ease,
+    background-color 0.25s ease;
+}
+.glow-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(249, 115, 22, 0.4);
+  box-shadow: 0 16px 36px -18px rgba(249, 115, 22, 0.35);
+  background-color: var(--color-card-hover);
+}
+
+/* ---------- Ambient background blobs ---------- */
+.bg-blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(90px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.testi-track::-webkit-scrollbar {
+  height: 6px;
+}
+.testi-track::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border-radius: 999px;
+}
+
+/* ---------- Hero headline: animated gradient shimmer ---------- */
+@keyframes text-shimmer {
+  to {
+    background-position: -200% center;
+  }
+}
+.text-gradient-animate {
+  background-image: linear-gradient(
+    90deg,
+    var(--color-gradient-start),
+    var(--color-gradient-end),
+    var(--color-gradient-start)
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: text-shimmer 5s linear infinite;
 }
