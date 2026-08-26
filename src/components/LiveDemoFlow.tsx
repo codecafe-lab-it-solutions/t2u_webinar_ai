@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { ArrowDown, FileInput, Database, MessageCircle, Mail, BellRing, Users, Repeat } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import Reveal from "./Reveal";
@@ -48,6 +49,18 @@ export default function LiveDemoFlow() {
         </div>
 
         <Reveal>
+          <div className="relative mx-auto mb-10 aspect-video max-w-[900px] overflow-hidden rounded-2xl border border-border-strong">
+            <Image
+              src="/webinar/image3.jpg"
+              alt="AI automation workflow: a customer message is analyzed by an AI assistant, which captures the lead in the CRM, notifies the team, schedules a follow-up, and surfaces growth trends in analytics."
+              fill
+              sizes="(max-width: 900px) 100vw, 900px"
+              className="object-cover"
+            />
+          </div>
+        </Reveal>
+
+        <Reveal delay={0.05}>
           <div className="mx-auto flex max-w-[760px] flex-col">
             {STEPS.map((step, i) => (
               <div key={step.label}>

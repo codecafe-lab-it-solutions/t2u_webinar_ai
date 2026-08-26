@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { FileText, MessagesSquare, ListChecks, Video, Award, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import Reveal from "./Reveal";
@@ -22,6 +23,18 @@ export default function Bonuses() {
           <span className="kicker">Register Today And Get</span>
           <h2>Webinar Bonuses</h2>
         </div>
+
+        <Reveal>
+          <div className="relative mx-auto mb-10 aspect-21/9 max-w-[980px] overflow-hidden rounded-2xl border border-border-strong">
+            <Image
+              src="/webinar/image5.jpg"
+              alt="A professional working with AI-automated tools — automated email drafts, content generation, and data syncing running in the background."
+              fill
+              sizes="(max-width: 980px) 100vw, 980px"
+              className="object-cover"
+            />
+          </div>
+        </Reveal>
 
         <div className="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-4">
           {BONUSES.map(({ icon: Icon, title, desc, tone }, i) => (

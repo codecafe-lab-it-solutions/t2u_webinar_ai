@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { XCircle } from "lucide-react";
 import Reveal from "./Reveal";
 import IconBadge from "./IconBadge";
@@ -21,6 +22,18 @@ export default function ProblemSection() {
           <span className="kicker">Sound Familiar?</span>
           <h2>क्या आप भी इन समस्याओं का सामना कर रहे हैं?</h2>
         </div>
+
+        <Reveal>
+          <div className="relative mx-auto mb-10 aspect-video max-w-[980px] overflow-hidden rounded-2xl border border-border-strong">
+            <Image
+              src="/webinar/image1.jpg"
+              alt="Before automation: an overwhelmed professional buried in manual tasks. After AI automation: the same work handled by CRM sync, automated follow-ups, and smart reporting."
+              fill
+              sizes="(max-width: 980px) 100vw, 980px"
+              className="object-cover"
+            />
+          </div>
+        </Reveal>
 
         <div className="mx-auto grid max-w-[980px] grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-4">
           {PROBLEMS.map((problem, i) => (

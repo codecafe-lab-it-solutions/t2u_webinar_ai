@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Reveal from "./Reveal";
 
 const AUDIENCE = [
@@ -21,6 +22,18 @@ export default function TargetAudience() {
           <span className="kicker">Who Is This For</span>
           <h2>यह Webinar किसके लिए है?</h2>
         </div>
+
+        <Reveal>
+          <div className="relative mx-auto mb-10 aspect-video max-w-[980px] overflow-hidden rounded-2xl border border-border-strong">
+            <Image
+              src="/webinar/image2.jpg"
+              alt="A diverse group of professionals — business owners, marketers, and freelancers — using AI automation tools for CRM, content generation, and business integration."
+              fill
+              sizes="(max-width: 980px) 100vw, 980px"
+              className="object-cover"
+            />
+          </div>
+        </Reveal>
 
         <Reveal>
           <div className="mx-auto flex max-w-[900px] flex-wrap justify-center gap-2.5">

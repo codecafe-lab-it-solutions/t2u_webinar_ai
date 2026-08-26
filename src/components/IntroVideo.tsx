@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Play } from "lucide-react";
 import { WEBINAR_CONFIG } from "@/lib/config";
 import { trackEvent } from "@/lib/analytics";
@@ -24,7 +25,19 @@ export default function IntroVideo() {
         </div>
 
         <Reveal>
-          <div className="relative mx-auto flex aspect-video max-w-[820px] items-center justify-center overflow-hidden rounded-2xl border border-border-strong bg-gradient-to-br from-brand-primary/35 to-brand-accent/25 shadow-[0_30px_70px_-30px_rgba(124,58,237,0.45)]">
+          <div className="relative mx-auto flex aspect-video max-w-[820px] items-center justify-center overflow-hidden rounded-2xl border border-border-strong shadow-[0_30px_70px_-30px_rgba(124,58,237,0.45)]">
+            {!(playing && hasVideo) && (
+              <>
+                <Image
+                  src="/webinar/image4.jpg"
+                  alt=""
+                  fill
+                  sizes="(max-width: 820px) 100vw, 820px"
+                  className="object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-br from-brand-primary/70 to-brand-accent/55" />
+              </>
+            )}
             {playing && hasVideo ? (
               <iframe
                 className="h-full w-full"
