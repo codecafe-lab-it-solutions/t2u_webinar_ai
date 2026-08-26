@@ -29,7 +29,7 @@ export const WEBINAR_CONFIG = {
   SUPPORT_EMAIL: "t2upgradeofficial@gmail.com",
   WEBSITE: "https://t2upgrade.com",
   // [WhatsApp community invite link] placeholder — replace before launch
-  WHATSAPP_COMMUNITY_LINK: "https://chat.whatsapp.com/REPLACE_WITH_INVITE_LINK",
+  WHATSAPP_COMMUNITY_LINK: "https://chat.whatsapp.com/HUwL4GnIpyZ7WkP0KCcDxo",
   // [Intro video] placeholder — set the unlisted YouTube ID before launch
   INTRO_VIDEO_YOUTUBE_ID: "",
 
