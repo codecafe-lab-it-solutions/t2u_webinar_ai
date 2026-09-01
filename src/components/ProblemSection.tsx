@@ -5,11 +5,8 @@ import IconBadge from "./IconBadge";
 
 const PROBLEMS = [
   "हर दिन repetitive कामों में कई घंटे बर्बाद हो जाते हैं",
-  "Content बनाने में बहुत समय लगता है",
   "Leads आती हैं, लेकिन proper follow-up नहीं हो पाता",
   "AI Tools के बारे में सुना है, लेकिन इस्तेमाल करना नहीं आता",
-  "Automation महँगी या technical लगती है",
-  "Business के लिए सही AI Tools चुनने में confusion होता है",
   "Online income शुरू करना चाहते हैं, लेकिन roadmap नहीं है",
 ];
 
@@ -35,7 +32,7 @@ export default function ProblemSection() {
           </div>
         </Reveal>
 
-        <div className="mx-auto grid max-w-[980px] grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-4">
+        <div className="mx-auto grid max-w-[720px] grid-cols-1 gap-4 sm:grid-cols-2">
           {PROBLEMS.map((problem, i) => (
             <Reveal key={problem} delay={i * 0.05}>
               <div className="glow-card flex h-full items-start gap-3.5 rounded-lg border border-border bg-card p-5">
