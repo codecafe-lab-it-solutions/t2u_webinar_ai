@@ -4,6 +4,7 @@ import { formatWebinarDate } from "@/lib/formatDate";
 import { googleCalendarUrl } from "@/lib/calendar";
 import { validateEmail } from "@/lib/registration";
 import { sendMail } from "@/lib/email/mailer";
+import { isRateLimited, clientIp } from "@/lib/rateLimit";
 import {
   confirmationEmailPreheader,
   confirmationEmailSubject,
@@ -14,24 +15,8 @@ import {
 
 export const runtime = "nodejs";
 
-/**
- * Best-effort per-IP rate limit. In-memory, so it resets on cold start and
- * doesn't share state across serverless instances — good enough as a first
- * line of defense against casual abuse of an unauthenticated mail-sending
- * endpoint, not a substitute for a shared store (e.g. Upstash Redis) if
- * this ever needs to hold up under real scale/attack traffic.
- */
 const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
 const RATE_LIMIT_MAX = 5;
-const requestLog = new Map<string, number[]>();
-
-function isRateLimited(ip: string): boolean {
-  const now = Date.now();
-  const timestamps = (requestLog.get(ip) ?? []).filter((t) => now - t < RATE_LIMIT_WINDOW_MS);
-  timestamps.push(now);
-  requestLog.set(ip, timestamps);
-  return timestamps.length > RATE_LIMIT_MAX;
-}
 
 interface SendConfirmationRequestBody {
   email?: string;
@@ -40,8 +25,8 @@ interface SendConfirmationRequestBody {
 }
 
 export async function POST(req: NextRequest) {
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-  if (isRateLimited(ip)) {
+  const ip = clientIp(req);
+  if (isRateLimited(`send-confirmation:${ip}`, RATE_LIMIT_WINDOW_MS, RATE_LIMIT_MAX)) {
     return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
   }
 

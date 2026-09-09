@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, IBM_Plex_Mono } from "next/font/google";
 import { MotionConfig } from "framer-motion";
 import "./globals.css";
+import { cn } from "@/lib/utils";
 
 const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta",
@@ -37,7 +38,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="hi"
-      className={`${plusJakarta.variable} ${plexMono.variable} h-full antialiased`}
+      className={cn("h-full", "antialiased", plusJakarta.variable, plexMono.variable, "font-sans")}
     >
       <body className="min-h-full flex flex-col font-sans">
         <MotionConfig reducedMotion="user">{children}</MotionConfig>

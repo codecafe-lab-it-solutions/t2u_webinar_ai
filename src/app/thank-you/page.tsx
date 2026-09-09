@@ -40,7 +40,6 @@ export default function ThankYouPage() {
   }, []);
 
   const { dateLabel, timeLabel } = formatWebinarDate();
-  const isPaid = WEBINAR_CONFIG.WEBINAR_MODE === "PAID";
 
   const handleShare = async () => {
     const shareData = {
@@ -103,7 +102,7 @@ export default function ThankYouPage() {
             </div>
           </div>
 
-          {isPaid && registration && (
+          {registration?.payment && (
             <div className="mt-4 rounded-lg border border-success/30 bg-success/10 px-4 py-3 text-left text-sm">
               <div className="flex justify-between">
                 <span className="text-text-muted">Payment Status</span>
@@ -111,7 +110,13 @@ export default function ThankYouPage() {
               </div>
               <div className="mt-1 flex justify-between">
                 <span className="text-text-muted">Amount Paid</span>
-                <span className="font-mono font-bold">₹{WEBINAR_CONFIG.WEBINAR_PRICE}</span>
+                <span className="font-mono font-bold">
+                  ₹{(registration.payment.amount / 100).toFixed(0)}
+                </span>
+              </div>
+              <div className="mt-1 flex justify-between gap-3">
+                <span className="shrink-0 text-text-muted">Payment ID</span>
+                <span className="truncate font-mono text-xs">{registration.payment.paymentId}</span>
               </div>
             </div>
           )}

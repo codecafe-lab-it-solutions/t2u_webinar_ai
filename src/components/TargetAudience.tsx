@@ -1,17 +1,73 @@
-import Image from "next/image";
 import Reveal from "./Reveal";
+import { SqueezeCarousel, type SqueezeSlide } from "./ui/carousel-squeeze";
 
-const AUDIENCE = [
-  "Students",
-  "Working Professionals",
-  "Business Owners",
-  "Entrepreneurs",
-  "Digital Marketers",
-  "Freelancers",
-  "Content Creators",
-  "Coaches and Trainers",
-  "Direct Selling Professionals",
-  "Anyone interested in AI and online income",
+const mark = (text: string) => <span className="text-sm font-semibold tracking-tight text-white">{text}</span>;
+
+const SLIDES: SqueezeSlide[] = [
+  {
+    id: "student",
+    title: "College में हैं?",
+    description:
+      "Graduate होने से पहले ही practical AI automation skills सीखकर बाकी candidates से आगे निकलें।",
+    image: "/brand/audience-student.jpg",
+    imageAlt: "Students in a classroom watching an AI Automation webinar on the projector",
+    overlay: mark("Student"),
+    action: "Reserve My Seat",
+    href: "#register",
+  },
+  {
+    id: "digital-marketer",
+    title: "Digital Marketing करते हैं?",
+    description:
+      "Content, ads reporting और client follow-up को AI से automate करके ज़्यादा campaigns संभालें।",
+    image: "/brand/audience-digital-marketer.jpg",
+    imageAlt: "A digital marketer attending an AI for Digital Marketing webinar on his laptop",
+    overlay: mark("Digital Marketer"),
+    action: "Reserve My Seat",
+    href: "#register",
+  },
+  {
+    id: "entrepreneur",
+    title: "अपना startup चला रहे हैं?",
+    description:
+      "Content creation और customer outreach जैसे repetitive काम AI को सौंपकर business पर focus करें।",
+    image: "/brand/audience-entrepreneur.jpg",
+    imageAlt: "A content creator and entrepreneur watching an AI Tools for Content Creators webinar",
+    overlay: mark("Entrepreneur"),
+    action: "Reserve My Seat",
+    href: "#register",
+  },
+  {
+    id: "business-owner",
+    title: "Business चलाते हैं?",
+    description:
+      "CRM, follow-up और reporting automate करके बिना नई hiring के अपनी team की output बढ़ाएँ।",
+    image: "/brand/audience-business-owner.jpg",
+    imageAlt: "Two business owners watching an AI in Business Adoption Strategies webinar",
+    overlay: mark("Business Owner"),
+    action: "Reserve My Seat",
+    href: "#register",
+  },
+  {
+    id: "working-professional",
+    title: "Job करते हैं?",
+    description: "रोज़ के manual tasks AI से automate करके अपने करियर के लिए extra समय निकालें।",
+    image: "/brand/audience-working-professional.jpg",
+    imageAlt: "A working professional couple watching an AI in Business Future Trends webinar",
+    overlay: mark("Working Professional"),
+    action: "Reserve My Seat",
+    href: "#register",
+  },
+  {
+    id: "freelancer",
+    title: "Freelance करते हैं?",
+    description: "Client communication और content delivery तेज़ करके एक साथ ज़्यादा projects संभालें।",
+    image: "/brand/audience-freelancer.jpg",
+    imageAlt: "A freelancer at his desk watching an AI for Creatives webinar",
+    overlay: mark("Freelancer"),
+    action: "Reserve My Seat",
+    href: "#register",
+  },
 ];
 
 export default function TargetAudience() {
@@ -24,31 +80,16 @@ export default function TargetAudience() {
         </div>
 
         <Reveal>
-          <div className="relative mx-auto mb-10 aspect-video max-w-[980px] overflow-hidden rounded-2xl border border-border-strong">
-            <Image
-              src="/webinar/image2.jpg"
-              alt="A diverse group of professionals — business owners, marketers, and freelancers — using AI automation tools for CRM, content generation, and business integration."
-              fill
-              sizes="(max-width: 980px) 100vw, 980px"
-              className="object-cover"
-            />
-          </div>
+          <SqueezeCarousel
+            slides={SLIDES}
+            label="Who this webinar is for"
+            height={300}
+            controls
+            hoverGrow
+          />
         </Reveal>
 
-        <Reveal>
-          <div className="mx-auto flex max-w-[900px] flex-wrap justify-center gap-2.5">
-            {AUDIENCE.map((item) => (
-              <span
-                key={item}
-                className="rounded-full border border-border-strong px-4 py-2.5 text-sm font-semibold text-text-muted transition-colors hover:border-brand-accent hover:text-brand-accent"
-              >
-                {item}
-              </span>
-            ))}
-          </div>
-        </Reveal>
-
-        <Reveal delay={0.15} className="mt-7 text-center">
+        <Reveal delay={0.15} className="mt-10 text-center">
           <a
             href="#register"
             className="btn-primary inline-flex items-center justify-center rounded-md px-6 py-3.5 text-sm font-bold"

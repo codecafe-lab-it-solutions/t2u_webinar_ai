@@ -34,10 +34,19 @@ export interface RegistrationPayload {
   consentTimestamp: string;
 }
 
+export interface PaymentInfo {
+  orderId: string;
+  paymentId: string;
+  amount: number;
+  currency: string;
+}
+
 export interface RegistrationResult {
   registrationId: string;
   registeredAt: string;
   payload: RegistrationPayload;
   /** The CRM lead's own id, returned by POST /leads. */
   leadId: string;
+  /** Present only for PAID registrations, and only after signature verification. */
+  payment?: PaymentInfo;
 }

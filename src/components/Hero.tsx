@@ -1,11 +1,10 @@
-import Image from "next/image";
-import { Calendar, Clock, Timer, Monitor, Languages, GraduationCap, Gift, Lock, Radio } from "lucide-react";
+import { Calendar, Clock, Timer, Monitor, Languages, GraduationCap, Lock, Radio } from "lucide-react";
 import { WEBINAR_CONFIG } from "@/lib/config";
 import { formatWebinarDate } from "@/lib/formatDate";
 import StatusPill from "./StatusPill";
-import CountdownTimer from "./CountdownTimer";
 import Reveal from "./Reveal";
 import AnimatedHeadline from "./AnimatedHeadline";
+import ExpandableProfileCard from "./expandable-profile-card";
 
 const EVENT_CARDS = [
   { icon: Calendar, label: "Date", value: formatWebinarDate().dateLabel },
@@ -108,33 +107,54 @@ export default function Hero() {
           </Reveal>
         </div>
 
-        <Reveal delay={0.2} className="relative">
-          <div className="relative rounded-2xl border border-border bg-card px-8 py-10 text-center">
-            <span className="absolute left-5 top-5">
-              <StatusPill tone="error">
-                <Radio size={12} strokeWidth={2} />
-                Live
-              </StatusPill>
-            </span>
-            <div className="relative mx-auto mb-5 mt-6 h-[152px] w-[152px] overflow-hidden rounded-full border-[3px] border-white/15">
-              <Image
-                src="/brand/founder-square.jpg"
-                alt={WEBINAR_CONFIG.TRAINER_NAME}
-                fill
-                sizes="152px"
-                className="object-cover"
-                priority
-              />
-            </div>
-            <div className="text-[18px] font-bold">{WEBINAR_CONFIG.TRAINER_NAME}</div>
-            <div className="mt-1 text-[13px] text-text-muted">{WEBINAR_CONFIG.TRAINER_ROLE}</div>
+        <Reveal delay={0.2} className="relative flex justify-center lg:-mt-14 lg:justify-end">
+          <ExpandableProfileCard
+            imageSrc="/brand/instructor.png"
+            title="Gaurav Saini"
+            subtitle="AI Product Manager"
+            content={
+              <div className="flex flex-col gap-6">
+                <p>
+                  A technology entrepreneur specializing in{" "}
+                  <strong className="text-foreground">
+                    AI, business automation, ERP, and IoT solutions
+                  </strong>
+                  , helping businesses streamline operations and scale efficiently.
+                </p>
 
-            <div className="mt-7 flex items-center justify-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.08em] text-text-faint">
-              <Gift size={12} strokeWidth={2} className="text-brand-accent" />
-              Webinar शुरू होने में
-            </div>
-            <CountdownTimer className="mt-3.5" />
-          </div>
+                <div>
+                  <h4 className="mb-2 font-semibold tracking-tight text-foreground">Background</h4>
+                  <p className="text-muted-foreground">
+                    Founder of <strong className="text-foreground">CodeCafeLab</strong>, with
+                    expertise in product strategy, mobile applications, ERP implementation, AI
+                    integrations, and digital transformation.
+                  </p>
+                </div>
+
+                <div>
+                  <h4 className="mb-2 font-semibold tracking-tight text-foreground">
+                    Current Focus
+                  </h4>
+                  <p className="text-muted-foreground">
+                    Building{" "}
+                    <strong className="text-foreground">
+                      smart, automation-driven solutions
+                    </strong>{" "}
+                    that improve productivity and drive measurable business growth.
+                  </p>
+                </div>
+
+                <a
+                  href="https://www.linkedin.com/in/gauravmyself/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-4 inline-flex self-start rounded-lg bg-primary px-5 py-2.5 font-medium text-primary-foreground shadow-sm transition-opacity hover:opacity-90"
+                >
+                  Connect with Gaurav
+                </a>
+              </div>
+            }
+          />
         </Reveal>
       </div>
     </section>

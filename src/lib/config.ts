@@ -6,8 +6,8 @@
  * never the secret.
  */
 export const WEBINAR_CONFIG = {
-  WEBINAR_MODE: "FREE" as "FREE" | "PAID",
-  WEBINAR_PRICE: 99,
+  WEBINAR_MODE: "PAID" as "FREE" | "PAID",
+  WEBINAR_PRICE: 299,
   WEBINAR_REGULAR_PRICE: 999,
   REGISTRATION_STATUS: "OPEN" as "OPEN" | "CLOSED",
   SEATS_LIMIT: 500,
@@ -33,7 +33,10 @@ export const WEBINAR_CONFIG = {
   // [Intro video] placeholder — set the unlisted YouTube ID before launch
   INTRO_VIDEO_YOUTUBE_ID: "",
 
-  RAZORPAY_KEY_ID: "rzp_test_REPLACE_ME",
+  // Client-safe publishable key (fine to expose in the browser bundle — it's
+  // not the secret). Order creation + signature verification happen only in
+  // the API routes below, using RAZORPAY_KEY_SECRET, which stays server-only.
+  RAZORPAY_KEY_ID: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ?? "",
 
   // T2U's public Courses & Leads API (see api-reference doc). Open CORS,
   // no auth required — called directly from the browser, in both dev and

@@ -4,9 +4,16 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { AlertCircle, Lock, ShieldCheck, Users } from "lucide-react";
 import { WEBINAR_CONFIG } from "@/lib/config";
-import { validateEmail, validateMobile, submitRegistration, RegistrationError } from "@/lib/registration";
+import {
+  validateEmail,
+  validateMobile,
+  submitRegistration,
+  payForWebinar,
+  RegistrationError,
+  PaymentCancelledError,
+} from "@/lib/registration";
 import { captureReferralCode, captureUtmParams, trackEvent } from "@/lib/analytics";
-import type { LearningGoal, Profession, RegistrationPayload } from "@/lib/types";
+import type { LearningGoal, PaymentInfo, Profession, RegistrationPayload } from "@/lib/types";
 import Reveal from "./Reveal";
 
 const PROFESSIONS: Profession[] = [
@@ -122,7 +129,12 @@ export default function RegistrationForm() {
     };
 
     try {
-      const result = await submitRegistration(payload);
+      let payment: PaymentInfo | undefined;
+      if (isPaid) {
+        payment = await payForWebinar(payload);
+      }
+
+      const result = await submitRegistration(payload, payment);
       trackEvent("form_submit", { webinarMode: WEBINAR_CONFIG.WEBINAR_MODE });
 
       // Fire-and-forget: the CRM lead (source of truth) is already saved at
@@ -143,6 +155,12 @@ export default function RegistrationForm() {
       sessionStorage.setItem("t2u_registration", JSON.stringify(result));
       router.push("/thank-you");
     } catch (err) {
+      if (err instanceof PaymentCancelledError) {
+        // User closed the Razorpay modal themselves — not a real error, no
+        // need for a scary red banner. Just let them try again.
+        setSubmitting(false);
+        return;
+      }
       const message =
         err instanceof RegistrationError
           ? err.message
