@@ -1,0 +1,50 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+# Serialize deploys: if a second push lands while one deploy is still running
+# (e.g. two PRs merged back-to-back), queue it instead of running both at once.
+# `cancel-in-progress: false` is deliberate — cancelling mid-flight would kill
+# `prisma migrate deploy` partway through a migration and leave it stuck,
+# exactly like the 2026-09-21 incident this fixes.
+concurrency:
+  group: t2u-webinar-ai-production-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*"
+
+      - name: Install PM2
+        run: npm install -g pm2
+
+      - name: Setup SSH Config
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "${{ secrets.CCL_PROD_WEBAPP_SSH_KEY }}" > ~/.ssh/ccl-prod-sites
+          chmod 600 ~/.ssh/ccl-prod-sites
+          cat > ~/.ssh/config << EOF
+          Host CCL-PROD-SITES
+              HostName ${{ secrets.CCL_PROD_WEBAPP_HOST }}
+              User sites
+              IdentityFile ~/.ssh/ccl-prod-sites
+              StrictHostKeyChecking no
+              UserKnownHostsFile=/dev/null
+          EOF
+          chmod 600 ~/.ssh/config
+
+      - name: Deploy with PM2
+        run: pm2 deploy ecosystem.config.cjs production
