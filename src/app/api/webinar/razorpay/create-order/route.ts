@@ -1,58 +1,29 @@
-import { NextRequest, NextResponse } from "next/server";
-import Razorpay from "razorpay";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { WEBINAR_CONFIG } from "@/lib/config";
 import { isRateLimited, clientIp } from "@/lib/rateLimit";
+import { orderNotes, paymentClient, PaymentError, registrationPayload } from "@/lib/server/webinar-payment";
 
 export const runtime = "nodejs";
 
-const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
-const RATE_LIMIT_MAX = 10;
-
 export async function POST(req: NextRequest) {
-  const ip = clientIp(req);
-  if (isRateLimited(`razorpay-create-order:${ip}`, RATE_LIMIT_WINDOW_MS, RATE_LIMIT_MAX)) {
+  if (isRateLimited(`razorpay-create-order:${clientIp(req)}`, 10 * 60 * 1000, 10)) {
     return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
   }
-
-  if (WEBINAR_CONFIG.WEBINAR_MODE !== "PAID") {
-    return NextResponse.json(
-      { error: "This webinar is not configured for paid registration." },
-      { status: 400 }
-    );
+  if (WEBINAR_CONFIG.WEBINAR_MODE !== "PAID" || WEBINAR_CONFIG.REGISTRATION_STATUS !== "OPEN") {
+    return NextResponse.json({ error: "Paid registration is not open." }, { status: 400 });
   }
-
-  const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
-  const keySecret = process.env.RAZORPAY_KEY_SECRET;
-  if (!keyId || !keySecret) {
-    console.error("create-order: Razorpay keys are not configured (.env.local)");
-    return NextResponse.json(
-      { error: "Payment isn't set up yet. Please contact support." },
-      { status: 503 }
-    );
-  }
-
-  const razorpay = new Razorpay({ key_id: keyId, key_secret: keySecret });
-
-  // Amount is derived from server config, never trusted from the client —
-  // otherwise a tampered request body could create a ₹1 order.
-  const amountInPaise = Math.round(WEBINAR_CONFIG.WEBINAR_PRICE * 100);
-
   try {
-    const order = await razorpay.orders.create({
-      amount: amountInPaise,
-      currency: "INR",
-      receipt: `t2u_webinar_${Date.now()}`,
-      notes: { webinar: WEBINAR_CONFIG.WEBINAR_NAME },
+    const input = await req.json().catch(() => { throw new PaymentError("Invalid JSON body."); });
+    const payload = registrationPayload(input);
+    const { client, keyId } = paymentClient();
+    const notes = orderNotes(payload);
+    const order = await client.orders.create({
+      amount: Math.round(WEBINAR_CONFIG.WEBINAR_PRICE * 100), currency: "INR",
+      receipt: notes.registration_id, notes,
     });
-
-    return NextResponse.json({
-      orderId: order.id,
-      amount: order.amount,
-      currency: order.currency,
-      keyId,
-    });
-  } catch (err) {
-    console.error("create-order: Razorpay order creation failed", err);
-    return NextResponse.json({ error: "Could not start payment. Please try again." }, { status: 502 });
+    return NextResponse.json({ orderId: order.id, amount: Number(order.amount), currency: order.currency, keyId });
+  } catch (error) {
+    // Do not log SDK request objects: they may contain Basic Auth credentials.
+    return NextResponse.json({ error: error instanceof PaymentError ? error.message : "Could not start payment. Please try again." }, { status: error instanceof PaymentError ? error.status : 502 });
   }
 }

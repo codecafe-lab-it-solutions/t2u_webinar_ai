@@ -1,9 +1,9 @@
 import Reveal from "./Reveal";
-import { SqueezeCarousel, type SqueezeSlide } from "./ui/carousel-squeeze";
+import Image from "next/image";
 
 const mark = (text: string) => <span className="text-sm font-semibold tracking-tight text-white">{text}</span>;
 
-const SLIDES: SqueezeSlide[] = [
+const SLIDES = [
   {
     id: "student",
     title: "College में हैं?",
@@ -72,22 +72,36 @@ const SLIDES: SqueezeSlide[] = [
 
 export default function TargetAudience() {
   return (
-    <section className="section">
+    <section id="audience" className="section">
       <div className="container mx-auto max-w-[1180px] px-5">
         <div className="section-head">
           <span className="kicker">Who Is This For</span>
           <h2>यह Webinar किसके लिए है?</h2>
         </div>
 
-        <Reveal>
-          <SqueezeCarousel
-            slides={SLIDES}
-            label="Who this webinar is for"
-            height={300}
-            controls
-            hoverGrow
-          />
-        </Reveal>
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {SLIDES.map((slide, index) => (
+            <Reveal key={slide.id} delay={index * 0.04}>
+              <article className="glow-card flex h-full min-w-0 flex-col overflow-hidden rounded-xl border border-border bg-card">
+                <div className="relative aspect-[16/10] w-full">
+                  <Image
+                    src={slide.image}
+                    alt={slide.imageAlt}
+                    fill
+                    sizes="(min-width: 1024px) 360px, (min-width: 640px) 50vw, 100vw"
+                    className="object-cover"
+                  />
+                  <div className="absolute inset-0 bg-linear-to-t from-black/75 via-transparent to-transparent" />
+                  <div className="absolute inset-x-0 bottom-0 px-5 py-4">{slide.overlay}</div>
+                </div>
+                <div className="flex flex-1 flex-col p-5">
+                  <h3 className="text-lg font-bold leading-relaxed text-foreground">{slide.title}</h3>
+                  <p className="mt-2 text-base leading-relaxed text-text-muted">{slide.description}</p>
+                </div>
+              </article>
+            </Reveal>
+          ))}
+        </div>
 
         <Reveal delay={0.15} className="mt-10 text-center">
           <a

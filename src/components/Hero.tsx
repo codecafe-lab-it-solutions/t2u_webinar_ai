@@ -19,7 +19,7 @@ export default function Hero() {
   const isPaid = WEBINAR_CONFIG.WEBINAR_MODE === "PAID";
 
   return (
-    <section id="top" className="relative overflow-hidden pb-16 pt-10 md:pb-20 md:pt-14">
+    <section id="top" className="relative overflow-clip pb-16 pt-10 md:pb-20 md:pt-14">
       <div className="pointer-events-none absolute -right-20 -top-32 h-[420px] w-[420px] rounded-full bg-brand-primary opacity-35 blur-[90px]" />
       <div className="pointer-events-none absolute -bottom-36 -left-24 h-[360px] w-[360px] rounded-full bg-brand-accent opacity-35 blur-[90px]" />
 
@@ -35,7 +35,7 @@ export default function Hero() {
           <AnimatedHeadline
             delay={0.12}
             lines={["AI सीखिए नहीं,", "AI से काम करवाना सीखिए!"]}
-            className="mt-4 text-[clamp(32px,5.4vw,54px)] font-extrabold leading-[1.15] tracking-[-0.02em]"
+            className="mt-4 text-[clamp(32px,5.4vw,54px)] font-extrabold leading-[1.4] tracking-[-0.02em]"
           />
 
           <Reveal delay={0.18}>

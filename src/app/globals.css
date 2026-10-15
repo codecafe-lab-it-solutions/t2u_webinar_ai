@@ -87,6 +87,18 @@
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 100px;
+}
+
+/* Keep content visible before hydration and if animation scripts fail. */
+@keyframes reveal-in {
+  from { transform: translateY(12px); }
+  to { transform: none; }
+}
+
+.reveal {
+  min-width: 0;
+  animation: reveal-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) var(--reveal-delay, 0s) both;
 }
 
 body {
@@ -108,6 +120,7 @@ body {
 /* These aren't Tailwind utilities — the page components rely on them for
    section rhythm, so they need real rules, not just a class name. */
 .container {
+  width: 100%;
   max-width: 1180px;
   margin-inline: auto;
   padding-inline: 20px;
@@ -117,6 +130,9 @@ body {
   padding-block: 88px;
 }
 @media (max-width: 767px) {
+  body {
+    padding-bottom: 80px;
+  }
   .section {
     padding-block: 56px;
   }
@@ -220,6 +236,13 @@ body {
 }
 
 /* ---------- Hero headline: animated gradient shimmer ---------- */
+/* Devanagari vowel marks extend beyond the font's line box. Give the
+   clipped gradient extra painting room above and below each line. */
+.hero-headline-line {
+  padding-block: 0.2em;
+  margin-block: -0.2em;
+}
+
 @keyframes text-shimmer {
   to {
     background-position: -200% center;

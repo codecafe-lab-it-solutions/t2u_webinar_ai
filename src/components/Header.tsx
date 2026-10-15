@@ -45,12 +45,12 @@ export default function Header() {
           scrolled ? "border-border bg-ground/85" : "border-transparent bg-ground/35"
         }`}
       >
-        <div className="mx-auto grid w-full max-w-[1180px] grid-cols-[auto_1fr_auto] items-center gap-4 px-5">
+        <div className="mx-auto flex w-full max-w-[1180px] items-center justify-between gap-3 px-5">
           <a href="#top" className="flex items-center">
             <Logo height={42} />
           </a>
 
-          <nav className="hidden items-center justify-center gap-7 md:flex">
+          <nav className="hidden min-w-0 items-center justify-center gap-5 lg:flex">
             {NAV_LINKS.map((link) => (
               <a
                 key={link.href}
@@ -64,14 +64,14 @@ export default function Header() {
 
           <div className="flex items-center justify-end gap-3">
             {scrolled && (
-              <span className="hidden items-center gap-1.5 rounded-full border border-warning/30 bg-warning/10 px-3.5 py-2 text-[10px] font-bold uppercase tracking-[0.08em] text-warning sm:inline-flex">
+              <span className="hidden items-center gap-1.5 rounded-full border border-warning/30 bg-warning/10 px-3.5 py-2 text-[10px] font-bold uppercase tracking-[0.08em] text-warning xl:inline-flex">
                 <Zap size={12} strokeWidth={2} />
                 <CountdownTimer compact />
               </span>
             )}
             <a
               href="#register"
-              className="btn-primary hidden rounded-md px-5 py-3 text-sm font-bold sm:inline-flex"
+              className="btn-primary hidden whitespace-nowrap rounded-md px-5 py-3 text-sm font-bold sm:inline-flex"
             >
               Reserve My Seat
             </a>
@@ -80,7 +80,7 @@ export default function Header() {
               aria-label="Open menu"
               aria-expanded={menuOpen}
               onClick={() => setMenuOpen(true)}
-              className="inline-flex rounded-md border border-border-strong p-2 text-text md:hidden"
+              className="inline-flex rounded-md border border-border-strong p-2 text-text lg:hidden"
             >
               <Menu size={20} strokeWidth={2} />
             </button>
@@ -89,7 +89,7 @@ export default function Header() {
       </header>
 
       {menuOpen && (
-        <div className="fixed inset-0 z-[70] flex flex-col bg-ground/98 p-5 backdrop-blur-md md:hidden">
+        <div className="fixed inset-0 z-[70] flex flex-col overflow-y-auto bg-ground/98 p-5 backdrop-blur-md lg:hidden">
           <div className="flex items-center justify-between">
             <Logo height={34} />
             <button

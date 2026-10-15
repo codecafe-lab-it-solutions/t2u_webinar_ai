@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { motion } from 'motion/react';
 
 interface ExpandableCardProps {
   imageSrc?: string;
@@ -17,35 +18,71 @@ export default function ExpandableProfileCard({
   content
 }: ExpandableCardProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
   const layoutId = `expandable-profile-card-${title}`;
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const trigger = triggerRef.current;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    closeRef.current?.focus({ preventScroll: true });
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsOpen(false);
+      if (event.key === 'Tab') {
+        const controls = closeRef.current?.closest('[role="dialog"]')?.querySelectorAll<HTMLElement>('button, a[href]');
+        if (!controls?.length) return;
+        const first = controls[0];
+        const last = controls[controls.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', onKeyDown);
+      trigger?.focus({ preventScroll: true });
+    };
+  }, [isOpen]);
 
   return (
     <>
-      <motion.div
+      <div className="w-full max-w-100">
+      <motion.button
+        ref={triggerRef}
+        type="button"
+        aria-label={`About ${title}`}
+        aria-haspopup="dialog"
         layoutId={layoutId}
         onClick={() => setIsOpen(true)}
-        className="cursor-pointer relative h-64 w-full max-w-100 overflow-hidden rounded-xl border border-border group shadow-sm"
+        className="cursor-pointer relative h-[380px] w-full max-w-100 overflow-hidden rounded-xl border border-border group text-left shadow-sm sm:h-[460px] lg:h-[520px]"
         whileHover="hover"
       >
         <motion.img 
           layoutId={`image-${layoutId}`} 
           src={imageSrc} 
+          alt={title}
           className="absolute inset-0 h-full w-full object-cover" 
           variants={{
             hover: { scale: 1.05 }
           }}
         />
-        <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent opacity-80 group-hover:opacity-100 transition-opacity" />
-        
-        <div className="absolute bottom-0 left-0 p-5 sm:p-6 w-full translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-          <motion.p layoutId={`subtitle-${layoutId}`} className="text-white text-xs font-medium tracking-wide uppercase mb-1.5">{subtitle}</motion.p>
-          <motion.h3 layoutId={`title-${layoutId}`} className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">{title}</motion.h3>
-        </div>
-      </motion.div>
+      </motion.button>
+      <div className="mt-5 w-full text-center">
+        <h3 className="text-[clamp(32px,3.2vw,46px)] font-extrabold leading-tight tracking-[-0.02em] text-foreground">{title}</h3>
+        <p className="mt-2 text-sm font-bold uppercase tracking-[0.12em] text-brand-accent sm:text-base">{subtitle}</p>
+      </div>
+      </div>
 
-      <AnimatePresence>
-        {isOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        {isOpen && createPortal(
+          <div role="dialog" aria-modal="true" aria-label={`About ${title}`} className="fixed inset-0 z-[80] flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -58,6 +95,9 @@ export default function ExpandableProfileCard({
               className="relative w-full max-w-4xl h-[80vh] bg-card rounded-2xl overflow-hidden border border-border z-10 flex flex-col md:flex-row shadow-xl"
             >
               <button 
+                ref={closeRef}
+                type="button"
+                aria-label="Close profile"
                 onClick={() => setIsOpen(false)} 
                 className="absolute top-4 right-4 z-20 flex h-8 w-8 items-center justify-center bg-background/50 hover:bg-accent rounded-full border border-border text-foreground transition-colors backdrop-blur-sm"
               >
@@ -68,6 +108,7 @@ export default function ExpandableProfileCard({
                 <motion.img 
                   layoutId={`image-${layoutId}`} 
                   src={imageSrc} 
+                  alt={title}
                   className="h-full w-full object-cover" 
                 />
                 <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent md:hidden" />
@@ -106,9 +147,8 @@ export default function ExpandableProfileCard({
                 </motion.div>
               </div>
             </motion.div>
-          </div>
+          </div>, document.body
         )}
-      </AnimatePresence>
     </>
   );
 }

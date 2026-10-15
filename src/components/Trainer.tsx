@@ -1,13 +1,6 @@
 import Image from "next/image";
 import { Award } from "lucide-react";
-import { WEBINAR_CONFIG } from "@/lib/config";
 import Reveal from "./Reveal";
-
-const STATS = [
-  { num: "1000+", label: "Students Trained" },
-  { num: "5+", label: "Years Experience" },
-  { num: "10+", label: "AI Workflows Built" },
-];
 
 const CO_INSTRUCTOR_HIGHLIGHTS = [
   "IT Product Manager, AI-powered automation",
@@ -26,44 +19,6 @@ export default function Trainer() {
         </div>
 
         <Reveal>
-          <div className="mx-auto grid max-w-[900px] items-center gap-7 rounded-2xl border border-border-strong bg-card p-8 sm:grid-cols-[auto_1fr] sm:p-9">
-            <div className="relative mx-auto h-32 w-32 overflow-hidden rounded-full ring-4 ring-brand-primary/15">
-              <Image
-                src="/brand/founder-square.jpg"
-                alt={WEBINAR_CONFIG.TRAINER_NAME}
-                fill
-                sizes="128px"
-                className="object-cover"
-              />
-            </div>
-            <div>
-              <h3 className="text-xl font-bold">{WEBINAR_CONFIG.TRAINER_NAME}</h3>
-              <p className="mt-0.5 text-sm font-semibold text-brand-accent">
-                Founder – {WEBINAR_CONFIG.BRAND_NAME}
-              </p>
-              <p className="mt-4 text-[15px] text-text-muted">
-                Kishan Khatri एक entrepreneur और skill-development trainer हैं। उनका उद्देश्य
-                students, professionals और business owners को practical digital skills, AI tools
-                और automation के माध्यम से आगे बढ़ने में मदद करना है।
-              </p>
-              <div className="mt-5 flex flex-wrap gap-3">
-                {STATS.map((s) => (
-                  <div
-                    key={s.label}
-                    className="rounded-lg border border-border bg-surface px-4 py-2.5"
-                  >
-                    <div className="font-mono text-xl font-extrabold text-gradient-end">
-                      {s.num}
-                    </div>
-                    <div className="text-xs text-text-faint">{s.label}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </Reveal>
-
-        <Reveal delay={0.15} className="mt-10">
           <p className="text-center text-lg font-bold sm:text-xl">
             Led by an industry practitioner
           </p>

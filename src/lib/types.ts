@@ -39,6 +39,7 @@ export interface PaymentInfo {
   paymentId: string;
   amount: number;
   currency: string;
+  mode?: "test" | "live";
 }
 
 export interface RegistrationResult {

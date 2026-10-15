@@ -59,6 +59,13 @@ export default function ThankYouPage() {
   };
 
   if (!hydrated) return null;
+  if (!registration) return (
+    <div className="mx-auto flex min-h-screen max-w-[640px] flex-col items-center justify-center gap-5 px-5 text-center">
+      <h1 className="text-2xl font-bold">No confirmed registration found</h1>
+      <p className="text-text-muted">Complete registration to reserve your seat. If you have already paid, return to the form to retry confirmation without paying again.</p>
+      <Link href="/#register" className="btn-primary rounded-md px-6 py-3 text-base font-bold">Back to Registration</Link>
+    </div>
+  );
 
   return (
     <div className="mx-auto flex min-h-screen max-w-[640px] flex-col justify-center px-5 py-14">
@@ -104,6 +111,7 @@ export default function ThankYouPage() {
 
           {registration?.payment && (
             <div className="mt-4 rounded-lg border border-success/30 bg-success/10 px-4 py-3 text-left text-sm">
+              {registration.payment.mode === "test" && <p className="mb-3 font-semibold text-warning">Test booking — no real money charged.</p>}
               <div className="flex justify-between">
                 <span className="text-text-muted">Payment Status</span>
                 <span className="font-bold text-success">Confirmed</span>

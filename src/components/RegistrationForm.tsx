@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { AlertCircle, Lock, ShieldCheck, Users } from "lucide-react";
 import { WEBINAR_CONFIG } from "@/lib/config";
@@ -11,9 +11,10 @@ import {
   payForWebinar,
   RegistrationError,
   PaymentCancelledError,
+  PENDING_PAYMENT_KEY,
 } from "@/lib/registration";
 import { captureReferralCode, captureUtmParams, trackEvent } from "@/lib/analytics";
-import type { LearningGoal, PaymentInfo, Profession, RegistrationPayload } from "@/lib/types";
+import type { LearningGoal, Profession, RegistrationPayload } from "@/lib/types";
 import Reveal from "./Reveal";
 
 const PROFESSIONS: Profession[] = [
@@ -75,7 +76,19 @@ export default function RegistrationForm() {
   const [submitting, setSubmitting] = useState(false);
   const [started, setStarted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [pendingPayment, setPendingPayment] = useState(false);
   const isPaid = WEBINAR_CONFIG.WEBINAR_MODE === "PAID";
+
+  useEffect(() => {
+    const saved = sessionStorage.getItem(PENDING_PAYMENT_KEY);
+    if (!saved) return;
+    try {
+      const { payload } = JSON.parse(saved) as { payload: RegistrationPayload };
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setForm({ ...INITIAL_STATE, ...payload });
+      setPendingPayment(true);
+    } catch { sessionStorage.removeItem(PENDING_PAYMENT_KEY); }
+  }, []);
 
   const update = <K extends keyof FormState>(key: K, value: FormState[K]) => {
     if (!started) {
@@ -129,12 +142,7 @@ export default function RegistrationForm() {
     };
 
     try {
-      let payment: PaymentInfo | undefined;
-      if (isPaid) {
-        payment = await payForWebinar(payload);
-      }
-
-      const result = await submitRegistration(payload, payment);
+      const result = isPaid ? await payForWebinar(payload) : await submitRegistration(payload);
       trackEvent("form_submit", { webinarMode: WEBINAR_CONFIG.WEBINAR_MODE });
 
       // Fire-and-forget: the CRM lead (source of truth) is already saved at
@@ -155,6 +163,7 @@ export default function RegistrationForm() {
       sessionStorage.setItem("t2u_registration", JSON.stringify(result));
       router.push("/thank-you");
     } catch (err) {
+      setPendingPayment(Boolean(sessionStorage.getItem(PENDING_PAYMENT_KEY)));
       if (err instanceof PaymentCancelledError) {
         // User closed the Razorpay modal themselves — not a real error, no
         // need for a scary red banner. Just let them try again.
@@ -199,6 +208,17 @@ export default function RegistrationForm() {
               </p>
             ) : (
               <form onSubmit={handleSubmit} noValidate>
+                {isPaid && WEBINAR_CONFIG.RAZORPAY_KEY_ID.startsWith("rzp_test_") && (
+                  <p className="mb-5 rounded-lg border border-warning/30 bg-warning/10 p-3 text-sm text-warning">
+                    Test checkout — no real money will be charged.
+                  </p>
+                )}
+                {pendingPayment && (
+                  <p role="status" className="mb-5 rounded-lg border border-warning/30 bg-warning/10 p-4 text-sm text-warning">
+                    Payment received. Confirmation is pending. Use the button below to retry confirmation without paying again.
+                  </p>
+                )}
+                <fieldset disabled={submitting || pendingPayment}>
                 {/*
                   Honeypot — hidden from real users, bots tend to fill every
                   field. Name/id/label are deliberately non-descriptive
@@ -389,6 +409,7 @@ export default function RegistrationForm() {
                   </label>
                 </div>
                 {errors.consent && <p className="mt-1 text-xs text-error">{errors.consent}</p>}
+                </fieldset>
 
                 {submitError && (
                   <div className="mt-5 flex items-start gap-2.5 rounded-lg border border-error/30 bg-error/10 p-4 text-sm text-error">
@@ -404,6 +425,8 @@ export default function RegistrationForm() {
                 >
                   {submitting
                     ? "Processing..."
+                    : pendingPayment
+                      ? "Retry Payment Confirmation"
                     : isPaid
                       ? `Pay ₹${WEBINAR_CONFIG.WEBINAR_PRICE} & Reserve My Seat`
                       : "🚀 Reserve My Seat Now"}

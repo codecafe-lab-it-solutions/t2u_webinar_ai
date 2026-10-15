@@ -33,26 +33,30 @@ declare global {
 }
 
 const CHECKOUT_SCRIPT_SRC = "https://checkout.razorpay.com/v1/checkout.js";
+let scriptLoading: Promise<void> | undefined;
 
 function loadRazorpayScript(): Promise<void> {
-  return new Promise((resolve, reject) => {
-    if (window.Razorpay) {
-      resolve();
-      return;
-    }
-    const existing = document.querySelector<HTMLScriptElement>(`script[src="${CHECKOUT_SCRIPT_SRC}"]`);
-    if (existing) {
-      existing.addEventListener("load", () => resolve());
-      existing.addEventListener("error", () => reject(new Error("Failed to load Razorpay checkout")));
-      return;
-    }
+  if (window.Razorpay) return Promise.resolve();
+  if (scriptLoading) return scriptLoading;
+  scriptLoading = new Promise<void>((resolve, reject) => {
     const script = document.createElement("script");
+    const timeout = window.setTimeout(() => fail(), 20000);
+    const fail = () => {
+      window.clearTimeout(timeout);
+      script.remove();
+      reject(new Error("Failed to load Razorpay checkout"));
+    };
     script.src = CHECKOUT_SCRIPT_SRC;
     script.async = true;
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error("Failed to load Razorpay checkout"));
+    script.onload = () => {
+      window.clearTimeout(timeout);
+      if (window.Razorpay) resolve();
+      else fail();
+    };
+    script.onerror = fail;
     document.body.appendChild(script);
-  });
+  }).catch((error) => { scriptLoading = undefined; throw error; });
+  return scriptLoading;
 }
 
 /** User-cancelled-the-modal is a distinct, expected outcome — not a real error. */
