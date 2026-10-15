@@ -1,13 +1,19 @@
-# Webinar payments
+ # Webinar payments
 
 Production site: **https://aimastery.t2upgrade.com/**
 
 Live webhook URL: **https://aimastery.t2upgrade.com/api/webinar/razorpay/webhook**
 
-Development checkout uses the supplied **test** keys in `.env.local`.
+Development uses the **test** keys in `.env.local` (`rzp_test_...`) at the full
+₹299 price. `.env.development.local` is intentionally empty of Razorpay
+settings, so development falls back to those test keys. Both files are gitignored.
+
+**Do not put live keys in `.env.development.local`.** See "Live mode blocks
+localhost" below — it was tried on Oct 15, 2026 and every attempt was rejected by
+Razorpay before any money could be captured.
 Production build/start uses the supplied **live** keys in `.env.production.local`,
 with a separate generated production webhook secret. Both files are gitignored.
-No live charges have been made. Do not put a secret in a
+No live charges have been made by the agent. Do not put a secret in a
 `NEXT_PUBLIC_` variable.
 
 ## Current flow
@@ -32,6 +38,34 @@ The form can retry confirmation after a network/CRM failure without another
 payment. Order markers skip repeat CRM writes after successful synchronization;
 simultaneous requests in one server worker share the same operation.
 
+## Live mode blocks localhost
+
+Razorpay live accounts enforce an account-level **registered website(s)** check.
+A checkout opened from `http://localhost:3000` with live keys is killed at
+`payment_initiation`:
+
+```
+error_description: "Payment blocked as website does not match registered website(s)"
+error_reason:      payment_risk_check_failed
+error_source:      internal
+```
+
+Observed on three live ₹1 attempts (`pay_To8varo6G7WZXS`, `pay_To8oP05XzWDeJn`,
+`pay_To8moawGlTH0d9`). The same live key pair captured successfully from an
+already-registered domain on the same day, so this is the origin domain — not the
+credentials, and not this code.
+
+A UPI QR fails worse than a plain decline: the payer's app can debit before the
+checkout order closes, producing a payment with `order_id: null` that Razorpay
+auto-refunds in full within about a second (`pay_To8riFiBXyIoMY` →
+`rfnd_To8rjxBWEsRWZt`, reason "The checkout order associated to the QR is
+closed"). The payer sees a successful debit in Google Pay, the site shows
+nothing, and no CRM lead appears — all correct, since nothing was ever captured.
+
+Real live-money testing therefore has to run on the deployed HTTPS domain, after
+adding it under Razorpay Dashboard → Account & Settings → Website and App
+Settings. `localhost` cannot be registered for a live account.
+
 ## Webhook activation after deployment
 
 The route `/api/webinar/razorpay/webhook` verifies the raw request body with
@@ -47,8 +81,9 @@ Webhook recovery syncs the CRM; email delivery still needs SMTP configuration.
 ## Live activation
 
 The supplied live key pair is configured in `.env.production.local` in this
-workspace. `npm run build` and `npm start` load it; `npm run dev` continues to use
-test keys. Host environment variables override the files, so DevOps must remove
+workspace. `npm run build` and `npm start` load it. The temporary development-only
+₹1 override is explicitly disabled in production code, even if its flag is set
+on the host; production continues to charge ₹299. Host environment variables override the files, so DevOps must remove
 any old test values from production hosting settings.
 
 DevOps handoff:

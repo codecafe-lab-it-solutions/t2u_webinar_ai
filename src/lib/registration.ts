@@ -1,5 +1,5 @@
 ﻿import { WEBINAR_CONFIG } from "@/lib/config";
-import { openRazorpayCheckout, PaymentCancelledError } from "@/lib/razorpay";
+import { openRazorpayCheckout, PaymentCancelledError, PaymentCheckoutError } from "@/lib/razorpay";
 import type { RegistrationPayload, RegistrationResult } from "@/lib/types";
 
 export { PaymentCancelledError };
@@ -50,6 +50,7 @@ export async function payForWebinar(payload: RegistrationPayload): Promise<Regis
       });
     } catch (error) {
       if (error instanceof PaymentCancelledError) throw error;
+      if (error instanceof PaymentCheckoutError) throw new RegistrationError(error.message);
       throw new RegistrationError("Checkout could not be loaded. Please check your connection and try again.");
     }
     // Keep the successful checkout receipt until both verification and CRM sync

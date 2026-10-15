@@ -25,6 +25,25 @@ const input = { fullName: 'Payment Test', mobileNumber: '9000000000', whatsappSa
   email: 'test@example.com', city: 'Test', profession: 'Other', learningGoal: '', consent: true,
   referredBy: '', utmSource: '', utmMedium: '', utmCampaign: '' };
 
+test('local one-rupee price override cannot affect production', () => {
+  const originalMode = process.env.NODE_ENV;
+  const originalFlag = process.env.NEXT_PUBLIC_LOCAL_PAYMENT_TEST;
+  try {
+    process.env.NEXT_PUBLIC_LOCAL_PAYMENT_TEST = 'true';
+    process.env.NODE_ENV = 'development';
+    assert.equal(load('src/lib/config.ts').WEBINAR_CONFIG.WEBINAR_PRICE, 1);
+    process.env.NODE_ENV = 'production';
+    assert.equal(load('src/lib/config.ts').WEBINAR_CONFIG.WEBINAR_PRICE, 299);
+    assert.equal(load('src/lib/config.ts').WEBINAR_CONFIG.LOCAL_PAYMENT_TEST, false);
+    process.env.NODE_ENV = 'development';
+    delete process.env.NEXT_PUBLIC_LOCAL_PAYMENT_TEST;
+    assert.equal(load('src/lib/config.ts').WEBINAR_CONFIG.WEBINAR_PRICE, 299);
+  } finally {
+    if (originalMode === undefined) delete process.env.NODE_ENV; else process.env.NODE_ENV = originalMode;
+    if (originalFlag === undefined) delete process.env.NEXT_PUBLIC_LOCAL_PAYMENT_TEST; else process.env.NEXT_PUBLIC_LOCAL_PAYMENT_TEST = originalFlag;
+  }
+});
+
 test('signature validation rejects forged, malformed and changed payment receipts', () => {
   const { validSignature } = load('src/lib/server/webinar-payment.ts');
   const signature = crypto.createHmac('sha256', 'test-secret').update('order_1|pay_1').digest('hex');

@@ -1,0 +1,153 @@
+# Deployment runbook — webinar landing page
+
+Target: **https://aimastery.t2upgrade.com**
+Stack: Next.js 16 (App Router, Node runtime) · Node 20+ · payments via Razorpay **live** keys.
+
+> **Read §1 first.** Credentials are deliberately not in this repository.
+> Pushing and deploying the code alone will produce a site that cannot take payments.
+
+---
+
+## 1. Secrets are NOT in Git
+
+`.gitignore` excludes `.env*` except `.env.example`. Verified: no `.env` file with real
+values has ever been committed, and no live key appears in any tracked file.
+
+The production values live in a single gitignored file in the developer's workspace:
+
+```
+.env.production.local
+```
+
+Transfer that file to the host through a secure channel (secret manager, password
+manager, encrypted transfer) — **not** Git, Slack, or email. Either place the file at the
+project root on the server, or copy its variables into the host's environment/secret
+manager. Host environment variables take precedence over the file.
+
+### Variables that must be set in production
+
+| Variable | Required | Notes |
+|---|---|---|
+| `NEXT_PUBLIC_RAZORPAY_KEY_ID` | **Yes** | Live publishable key (`rzp_live_…`). Public by design; baked into the browser bundle **at build time** — see §3. |
+| `RAZORPAY_KEY_SECRET` | **Yes** | Server-only. Never prefix with `NEXT_PUBLIC_`. |
+| `RAZORPAY_WEBHOOK_SECRET` | **Yes** | Must byte-match the secret entered in the Razorpay dashboard (§4). |
+| `T2U_API_BASE_URL` | **Yes** | `https://t2upgrade.com/api` |
+| `SMTP_HOST` / `SMTP_USER` / `SMTP_PASSWORD` | **Yes** | Hostinger mailbox `support@t2upgrade.com`. Credentials verified against the live server. |
+| `SMTP_PORT` / `SMTP_SECURE` | **Yes** | **`465` with `SMTP_SECURE=true`** (implicit TLS). If the host blocks 465, switch to `587` **and** `SMTP_SECURE=false` — the two must change together or sending breaks. |
+| `SMTP_FROM_EMAIL` / `SMTP_FROM_NAME` / `SMTP_REPLY_TO` | **Yes** | `support@t2upgrade.com` / `T2Upgrade`. |
+
+Remove any stale `rzp_test_…` values from the hosting environment — host variables
+override the file and would silently put production into test mode.
+
+---
+
+## 2. Razorpay dashboard — register the website (BLOCKING)
+
+**Until this is done, every live payment fails.** Razorpay live accounts enforce an
+account-level registered-website check and reject payments from any other origin with
+`Payment blocked as website does not match registered website(s)`.
+
+1. Razorpay Dashboard → **Account & Settings → Website and App Settings**.
+2. Add `https://aimastery.t2upgrade.com`.
+3. Wait for approval (a few hours to ~1 business day).
+4. Under **Payment Methods**, confirm **UPI** is enabled on the live account.
+
+`localhost` cannot be registered. All live verification happens on the deployed domain.
+
+---
+
+## 3. Build and start
+
+`NEXT_PUBLIC_RAZORPAY_KEY_ID` is inlined into the client bundle during `next build`.
+**Secrets must be present before the build runs**, not just before start — otherwise the
+checkout opens with an empty key.
+
+```bash
+npm ci
+npm run check:payments:production   # read-only: asserts live keys authenticate
+npm run test:payments               # 4 payment-logic tests, offline
+npm run build
+npm start                           # behind the process manager / reverse proxy
+```
+
+Serve over HTTPS. The app must respond on the apex path and on
+`/api/webinar/razorpay/webhook`.
+
+---
+
+## 4. Razorpay dashboard — register the webhook
+
+This is the recovery path for a customer who pays and then closes the browser before the
+confirmation request completes. Without it, those customers are charged but never
+registered.
+
+1. Razorpay Dashboard → **Live Mode** → Settings → **Webhooks** → Add New Webhook.
+2. URL: `https://aimastery.t2upgrade.com/api/webinar/razorpay/webhook`
+3. Secret: the exact `RAZORPAY_WEBHOOK_SECRET` value from the production environment.
+4. Active events: **`payment.captured`** and **`order.paid`** (both).
+5. Save, then confirm delivery shows HTTP 200 after the §5 smoke test.
+
+The route verifies the raw request body HMAC and returns 503 if the secret is unset,
+400 on a signature mismatch.
+
+---
+
+## 5. Post-deploy smoke test (one real payment)
+
+Production always charges the real ₹299 — the ₹1 development override is hard-disabled
+in production builds and cannot be enabled by a host variable. Run one genuine payment
+and refund it from the dashboard afterwards (Razorpay retains its fee, ~₹7).
+
+Complete a registration on the live site, then verify **all five**:
+
+- [ ] Razorpay dashboard shows the payment as **captured** (not just authorized)
+- [ ] Admin → CRM shows the lead with `payment_status: PAID` and source `ai_automation_webinar_paid`
+- [ ] Browser landed on `/thank-you` with the WhatsApp community link
+- [ ] Razorpay → Webhooks shows a **200** delivery for that payment
+- [ ] Confirmation email received at the registrant's address
+
+Then refund the test payment from the Razorpay dashboard.
+
+---
+
+## 6. How the payment flow works (for triage)
+
+1. Browser POSTs the form to `/api/webinar/razorpay/create-order`; the **server** validates
+   it and creates the order for the server-side price. The browser cannot choose the amount.
+2. All form answers are stored in the Razorpay order's `notes`, so the server never trusts
+   a later client body.
+3. Checkout returns a receipt → `/api/webinar/razorpay/verify` validates the HMAC, re-fetches
+   the real order and payment from Razorpay, and checks ownership, amount, currency, refunds
+   and capture status.
+4. Only after capture does the server POST the lead to `T2U_API_BASE_URL/leads` with
+   `payment_status: "PAID"`, then writes the CRM lead id back onto the Razorpay order.
+5. The confirmation page is shown only after capture **and** CRM sync succeed.
+
+Razorpay is the payment ledger — the public leads endpoint is unauthenticated, so its
+`source` field is not proof of payment.
+
+---
+
+## 7. Email (SMTP) — verified
+
+Outbound mail is configured and **proven working** against Hostinger:
+
+- `nodemailer.verify()` — server accepted the connection and the credentials on
+  `smtp.hostinger.com:465` (implicit TLS).
+- A real message was delivered: queued by the server as `250 2.0.0 Ok`, zero rejections.
+
+Not yet exercised: the `/api/send-confirmation` route end-to-end with the real
+booking template. That is covered by the §5 smoke test — confirm the registrant
+actually receives the confirmation mail.
+
+Deliverability note: check that SPF (and ideally DKIM/DMARC) for `t2upgrade.com`
+authorises Hostinger to send, or confirmations may land in spam.
+
+## 8. Known gaps at handoff
+
+| Gap | Impact | Owner |
+|---|---|---|
+| Webhook never exercised | Code is implemented but has never received a real delivery (impossible from localhost). First proof is the §5 smoke test. | DevOps |
+| No successful live payment to date | Every prior live attempt was blocked by §2. The real-money path is unproven until §5 passes. | DevOps |
+| `INTRO_VIDEO_YOUTUBE_ID` empty | Intro video slot unpopulated. | Marketing |
+| CRM has no authenticated registration endpoint | A crash between lead creation and the Razorpay marker write can duplicate a lead; the 500-seat cap is content, not enforced inventory. | Backend |

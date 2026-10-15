@@ -19,6 +19,10 @@ interface RazorpayCheckoutOptions {
 
 interface RazorpayInstance {
   open: () => void;
+  close: () => void;
+  on: (event: "payment.failed", handler: (response: {
+    error?: { reason?: string; metadata?: { payment_id?: string } };
+  }) => void) => void;
 }
 
 declare global {
@@ -61,6 +65,7 @@ function loadRazorpayScript(): Promise<void> {
 
 /** User-cancelled-the-modal is a distinct, expected outcome — not a real error. */
 export class PaymentCancelledError extends Error {}
+export class PaymentCheckoutError extends Error {}
 
 /**
  * Opens Razorpay's Checkout modal and resolves with the raw success payload
@@ -85,6 +90,16 @@ export async function openRazorpayCheckout(
       modal: {
         ondismiss: () => reject(new PaymentCancelledError("Payment was cancelled")),
       },
+    });
+    rzp.on("payment.failed", (response) => {
+      const reference = response.error?.metadata?.payment_id;
+      const reason = response.error?.reason === "payment_risk_check_failed"
+        ? "Razorpay declined the payment during its risk check."
+        : "Razorpay reported that the payment failed.";
+      reject(new PaymentCheckoutError(
+        `${reason} Your seat is not confirmed. If your UPI app or bank shows a successful debit, do not pay again; contact support with your transaction reference.${reference ? ` Payment ID: ${reference}` : ""}`
+      ));
+      rzp.close();
     });
     rzp.open();
   });

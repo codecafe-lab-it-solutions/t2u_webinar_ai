@@ -5,17 +5,25 @@
  * server — RAZORPAY_KEY_ID below is the client-safe publishable key only,
  * never the secret.
  */
+// Deliberately gated on development: even if the flag reaches a production host,
+// next build/next start must continue to charge the standard webinar price.
+const localPaymentTest = process.env.NODE_ENV === "development"
+  && process.env.NEXT_PUBLIC_LOCAL_PAYMENT_TEST === "true";
+
 export const WEBINAR_CONFIG = {
   WEBINAR_MODE: "PAID" as "FREE" | "PAID",
-  WEBINAR_PRICE: 299,
+  WEBINAR_PRICE: localPaymentTest ? 1 : 299,
+  LOCAL_PAYMENT_TEST: localPaymentTest,
   WEBINAR_REGULAR_PRICE: 999,
   REGISTRATION_STATUS: "OPEN" as "OPEN" | "CLOSED",
   SEATS_LIMIT: 500,
   WEBINAR_LINK_RELEASE: "BEFORE_EVENT" as "IMMEDIATE" | "BEFORE_EVENT",
 
   WEBINAR_NAME: "AI Automation Webinar",
-  // [Webinar Date/Time] placeholder — replace with the confirmed slot before launch
-  WEBINAR_DATE_ISO: "2026-09-20T19:00:00+05:30",
+  // Confirmed slot: Tue, 20 Oct 2026, 7:00 PM IST. Single source of truth —
+  // countdown, calendar invite, page copy and the confirmation email all derive
+  // from this one value.
+  WEBINAR_DATE_ISO: "2026-10-20T19:00:00+05:30",
   WEBINAR_DURATION: "90–120 मिनट",
   WEBINAR_MODE_LABEL: "Live Online Webinar",
   WEBINAR_LANGUAGE: "Hindi + English",
