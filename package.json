@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test:payments": "node --test tests/payment.test.cjs",
-    "check:payments:production": "node scripts/check-production-payments.mjs"
+    "check:payments:production": "node scripts/check-production-payments.mjs",
+    "inspect:payments": "node scripts/inspect-payments.mjs"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",
