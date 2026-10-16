@@ -94,27 +94,23 @@ The route verifies the raw request body HMAC and returns 503 if the secret is un
 
 ## 5. Post-deploy smoke test (one real payment)
 
-> ⚠️ **The deployed price is currently ₹1, not ₹299.** This is deliberate — the
-> first live payment is a ₹1 smoke test. It **must** be reverted before the page
-> is promoted. See "Reverting to the real price" below.
-
-`WEBINAR_PRICE` in `src/lib/config.ts` is the single source of truth. The hero,
+The live price is **₹299**. `WEBINAR_PRICE` in `src/lib/config.ts` is the single
+source of truth. The hero,
 announcement bar, pay button, sticky mobile bar, the Razorpay order amount and the
 server-side amount check all derive from it — there is no second place to change.
 
 While it is not ₹299, a red **"LIVE TEST PRICING"** banner shows at the top of the
 page and above the pay button, and `npm run test:payments` prints a reminder line.
 
-### Reverting to the real price
+### Running a ₹1 smoke test
 
-```ts
-// src/lib/config.ts
-const WEBINAR_PRICE = 1;        // <- change to STANDARD_PRICE
-```
+Set `const WEBINAR_PRICE: number = 1;` in `src/lib/config.ts`, rebuild, test, then
+set it back to `STANDARD_PRICE` and rebuild again. The price is baked into the page
+at build time, so a restart alone will not change it. Confirm on the live page that
+it reads **₹299** with **no red banner** before sending any traffic.
 
-Then rebuild (`npm run build`) — the price is baked into the page at build time, so
-a restart alone will not change it. Confirm on the live page that it reads **₹299**
-with **no red banner** before sending any traffic.
+Alternatively, pay the real ₹299 and refund it from the Razorpay dashboard
+(Razorpay keeps ~₹7 in fees) — no code change, nothing to remember to revert.
 
 Complete a registration on the live site, then verify **all five**:
 
@@ -125,6 +121,24 @@ Complete a registration on the live site, then verify **all five**:
 - [ ] Confirmation email received at the registrant's address
 
 Then refund the test payment from the Razorpay dashboard.
+
+### Verified live run — 16 Oct 2026
+
+The paid path is proven end to end on the live domain:
+
+| | |
+|---|---|
+| Order | `order_ToSG9FenuLXTjr` — ₹1, status `paid` |
+| Payment | `pay_ToSGadCWxyNByM` — UPI, status `captured`, 04:54:23 UTC |
+| CRM lead | `c36c721e-38cf-4da7-a908-6db9e19aff95`, `crm_payment_status: PAID` |
+| Order marker | `registered_at: 2026-10-16T04:54:38Z` written back to Razorpay |
+
+No `website does not match registered website(s)` rejections occurred on the live
+domain; that error only ever appeared for checkouts opened from localhost.
+
+**What this run does not prove:** the CRM sync above was performed by the browser's
+confirmation request, not by the webhook. The webhook has still never fired — see
+§4 and the gaps table.
 
 ---
 
@@ -165,8 +179,7 @@ authorises Hostinger to send, or confirmations may land in spam.
 
 | Gap | Impact | Owner |
 |---|---|---|
-| `WEBINAR_PRICE` in `src/lib/config.ts` is currently **1**, not 299 | **Customers would pay ₹1.** Deliberate, for the live smoke test. Revert and rebuild before promoting the page — see §5. | Dev / DevOps |
-| Webhook never exercised | Code is implemented but has never received a real delivery (impossible from localhost). First proof is the §5 smoke test. | DevOps |
-| No successful live payment to date | Every prior live attempt was blocked by §2. The real-money path is unproven until §5 passes. | DevOps |
+| **No webhook is registered in Razorpay** (verified: the account lists **0** webhooks) | **Blocking.** A customer who pays and then closes the browser before confirmation completes is charged but never registered, and nothing recovers them. See §4. | DevOps |
+| Checkout dismissal is silent after a UPI QR scan | Three ₹1 payments on 16 Oct (`pay_ToQfIUyY6cuX3z`, `pay_ToQehFIrTloaQa`, `pay_ToQdrdE3vzGkw8`) arrived with no order attached and were auto-refunded. The payer's app shows a successful debit; the page shows nothing. | Dev |
 | `INTRO_VIDEO_YOUTUBE_ID` empty | Intro video slot unpopulated. | Marketing |
 | CRM has no authenticated registration endpoint | A crash between lead creation and the Razorpay marker write can duplicate a lead; the 500-seat cap is content, not enforced inventory. | Backend |

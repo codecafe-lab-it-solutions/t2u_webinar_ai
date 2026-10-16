@@ -12,18 +12,14 @@ const localPaymentTest = process.env.NODE_ENV === "development"
 
 const STANDARD_PRICE: number = 299;
 
-// ============================================================================
-// ⚠️  TEMPORARY LIVE TEST PRICE — CURRENTLY ₹1, NOT THE REAL PRICE.
-//
-// Set this back to STANDARD_PRICE once the live payment test has passed.
-// This is the ONLY line that needs changing: the hero, announcement bar, pay
+// The live charge. Single source of truth: the hero, announcement bar, pay
 // button, sticky mobile bar, the Razorpay order amount and the server-side
-// amount check all derive from it.
+// amount check all derive from this one value.
 //
-// While it is not STANDARD_PRICE, a red "LIVE TEST PRICING" banner shows at
-// the top of the page and above the pay button, so the state is visible.
-// ============================================================================
-const WEBINAR_PRICE: number = 1;
+// For a live smoke test, set this to 1 temporarily and rebuild. Any value other
+// than STANDARD_PRICE raises a red "LIVE TEST PRICING" banner at the top of the
+// page and above the pay button, so a test price cannot ship unnoticed.
+const WEBINAR_PRICE: number = STANDARD_PRICE;
 
 export const WEBINAR_CONFIG = {
   WEBINAR_MODE: "PAID" as "FREE" | "PAID",
