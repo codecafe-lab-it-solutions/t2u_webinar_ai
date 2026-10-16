@@ -25,22 +25,30 @@ const input = { fullName: 'Payment Test', mobileNumber: '9000000000', whatsappSa
   email: 'test@example.com', city: 'Test', profession: 'Other', learningGoal: '', consent: true,
   referredBy: '', utmSource: '', utmMedium: '', utmCampaign: '' };
 
-test('local one-rupee price override cannot affect production', () => {
-  const originalMode = process.env.NODE_ENV;
-  const originalFlag = process.env.NEXT_PUBLIC_LOCAL_PAYMENT_TEST;
-  try {
-    process.env.NEXT_PUBLIC_LOCAL_PAYMENT_TEST = 'true';
-    process.env.NODE_ENV = 'development';
-    assert.equal(load('src/lib/config.ts').WEBINAR_CONFIG.WEBINAR_PRICE, 1);
-    process.env.NODE_ENV = 'production';
-    assert.equal(load('src/lib/config.ts').WEBINAR_CONFIG.WEBINAR_PRICE, 299);
-    assert.equal(load('src/lib/config.ts').WEBINAR_CONFIG.LOCAL_PAYMENT_TEST, false);
-    process.env.NODE_ENV = 'development';
-    delete process.env.NEXT_PUBLIC_LOCAL_PAYMENT_TEST;
-    assert.equal(load('src/lib/config.ts').WEBINAR_CONFIG.WEBINAR_PRICE, 299);
-  } finally {
-    if (originalMode === undefined) delete process.env.NODE_ENV; else process.env.NODE_ENV = originalMode;
-    if (originalFlag === undefined) delete process.env.NEXT_PUBLIC_LOCAL_PAYMENT_TEST; else process.env.NEXT_PUBLIC_LOCAL_PAYMENT_TEST = originalFlag;
+test('the webinar price is a single source of truth, and announces itself when it is not the real price', () => {
+  const { WEBINAR_CONFIG } = load('src/lib/config.ts');
+  const price = WEBINAR_CONFIG.WEBINAR_PRICE;
+
+  // A sane, chargeable amount in rupees.
+  assert.ok(Number.isInteger(price) && price > 0, 'price must be a positive integer');
+  assert.equal(WEBINAR_CONFIG.STANDARD_PRICE, 299, 'the real launch price must stay 299');
+
+  // The warning banners derive from the price, so reverting the price is the
+  // only action needed to clear them. They must never disagree.
+  assert.equal(
+    WEBINAR_CONFIG.LIVE_TEST_PRICE_ACTIVE,
+    price !== WEBINAR_CONFIG.STANDARD_PRICE,
+    'LIVE_TEST_PRICE_ACTIVE must track whether the price is the real one'
+  );
+
+  // Razorpay is charged in paise, derived from the same value — never hardcoded.
+  assert.equal(Math.round(price * 100), price * 100, 'price must convert cleanly to paise');
+
+  if (price !== WEBINAR_CONFIG.STANDARD_PRICE) {
+    console.log(
+      `  NOTE: webinar price is currently Rs ${price}, not Rs ${WEBINAR_CONFIG.STANDARD_PRICE}. ` +
+      'This is the temporary live-test price. Set WEBINAR_PRICE back in src/lib/config.ts before launch.'
+    );
   }
 });
 
@@ -67,6 +75,8 @@ test('registration validation enforces consent and preserves Hindi answers in or
 test('capture, admin sync, duplicate retries, amount tampering and CRM failure', async () => {
   process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID = 'rzp_test_unit';
   process.env.RAZORPAY_KEY_SECRET = 'unit-secret';
+  // Derived, never hardcoded: the suite must stay valid whatever price is configured.
+  const PAISE = load('src/lib/config.ts').WEBINAR_CONFIG.WEBINAR_PRICE * 100;
   let order, payment, writes = 0, captures = 0, failCrm = false, crmStatus = 'PAID';
   class FakeRazorpay {
     orders = {
@@ -76,15 +86,15 @@ test('capture, admin sync, duplicate retries, amount tampering and CRM failure',
     payments = {
       fetch: async () => structuredClone(payment),
       capture: async (_id, amount, currency) => {
-        assert.equal(amount, 29900); assert.equal(currency, 'INR'); captures++;
+        assert.equal(amount, PAISE); assert.equal(currency, 'INR'); captures++;
         payment.status = 'captured'; return payment;
       },
     };
   }
   const service = load('src/lib/server/webinar-payment.ts', { razorpay: FakeRazorpay });
   const reset = () => {
-    order = { id: 'order_unit', amount: 29900, currency: 'INR', notes: service.orderNotes(service.registrationPayload(input)) };
-    payment = { id: 'pay_unit', order_id: order.id, amount: 29900, currency: 'INR', status: 'authorized', amount_refunded: 0 };
+    order = { id: 'order_unit', amount: PAISE, currency: 'INR', notes: service.orderNotes(service.registrationPayload(input)) };
+    payment = { id: 'pay_unit', order_id: order.id, amount: PAISE, currency: 'INR', status: 'authorized', amount_refunded: 0 };
   };
   const originalFetch = global.fetch;
   global.fetch = async (_url, request) => {
@@ -100,7 +110,7 @@ test('capture, admin sync, duplicate retries, amount tampering and CRM failure',
     assert.deepEqual(a, b); assert.equal(writes, 1); assert.equal(captures, 1);
     const again = await service.finalizePayment(order.id, payment.id);
     assert.equal(again.leadId, 'lead_unit'); assert.equal(writes, 1);
-    reset(); payment.amount = 100;
+    reset(); payment.amount = PAISE - 1;
     await assert.rejects(service.finalizePayment(order.id, payment.id), /amount/);
     assert.equal(writes, 1);
     reset(); payment.order_id = 'order_other';

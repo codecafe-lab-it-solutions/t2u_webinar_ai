@@ -10,10 +10,29 @@
 const localPaymentTest = process.env.NODE_ENV === "development"
   && process.env.NEXT_PUBLIC_LOCAL_PAYMENT_TEST === "true";
 
+const STANDARD_PRICE: number = 299;
+
+// ============================================================================
+// ⚠️  TEMPORARY LIVE TEST PRICE — CURRENTLY ₹1, NOT THE REAL PRICE.
+//
+// Set this back to STANDARD_PRICE once the live payment test has passed.
+// This is the ONLY line that needs changing: the hero, announcement bar, pay
+// button, sticky mobile bar, the Razorpay order amount and the server-side
+// amount check all derive from it.
+//
+// While it is not STANDARD_PRICE, a red "LIVE TEST PRICING" banner shows at
+// the top of the page and above the pay button, so the state is visible.
+// ============================================================================
+const WEBINAR_PRICE: number = 1;
+
 export const WEBINAR_CONFIG = {
   WEBINAR_MODE: "PAID" as "FREE" | "PAID",
-  WEBINAR_PRICE: localPaymentTest ? 1 : 299,
+  WEBINAR_PRICE,
   LOCAL_PAYMENT_TEST: localPaymentTest,
+  // Follows the price automatically. Drives the warning banners, so reverting
+  // the price above is all that is needed to clear them.
+  LIVE_TEST_PRICE_ACTIVE: WEBINAR_PRICE !== STANDARD_PRICE,
+  STANDARD_PRICE,
   WEBINAR_REGULAR_PRICE: 999,
   REGISTRATION_STATUS: "OPEN" as "OPEN" | "CLOSED",
   SEATS_LIMIT: 500,

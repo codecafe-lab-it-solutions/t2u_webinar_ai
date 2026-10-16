@@ -3,9 +3,11 @@ import { WEBINAR_CONFIG } from "@/lib/config";
 
 export default function AnnouncementBar() {
   const isPaid = WEBINAR_CONFIG.WEBINAR_MODE === "PAID";
-  const message = isPaid
-    ? `Special Launch Price ₹${WEBINAR_CONFIG.WEBINAR_PRICE} — Limited Seats Only`
-    : "Limited Seats Available | Registration Closing Soon";
+  const message = WEBINAR_CONFIG.LIVE_TEST_PRICE_ACTIVE
+    ? `LIVE TEST PRICING ACTIVE — charging ₹${WEBINAR_CONFIG.WEBINAR_PRICE}, not ₹${WEBINAR_CONFIG.STANDARD_PRICE}`
+    : isPaid
+      ? `Special Launch Price ₹${WEBINAR_CONFIG.WEBINAR_PRICE} — Limited Seats Only`
+      : "Limited Seats Available | Registration Closing Soon";
 
   return (
     <div className="border-b border-border bg-error/10 px-4 py-2.5 text-center text-[13px] font-semibold text-[#ffd0dc]">

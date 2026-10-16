@@ -94,9 +94,27 @@ The route verifies the raw request body HMAC and returns 503 if the secret is un
 
 ## 5. Post-deploy smoke test (one real payment)
 
-Production always charges the real ₹299 — the ₹1 development override is hard-disabled
-in production builds and cannot be enabled by a host variable. Run one genuine payment
-and refund it from the dashboard afterwards (Razorpay retains its fee, ~₹7).
+> ⚠️ **The deployed price is currently ₹1, not ₹299.** This is deliberate — the
+> first live payment is a ₹1 smoke test. It **must** be reverted before the page
+> is promoted. See "Reverting to the real price" below.
+
+`WEBINAR_PRICE` in `src/lib/config.ts` is the single source of truth. The hero,
+announcement bar, pay button, sticky mobile bar, the Razorpay order amount and the
+server-side amount check all derive from it — there is no second place to change.
+
+While it is not ₹299, a red **"LIVE TEST PRICING"** banner shows at the top of the
+page and above the pay button, and `npm run test:payments` prints a reminder line.
+
+### Reverting to the real price
+
+```ts
+// src/lib/config.ts
+const WEBINAR_PRICE = 1;        // <- change to STANDARD_PRICE
+```
+
+Then rebuild (`npm run build`) — the price is baked into the page at build time, so
+a restart alone will not change it. Confirm on the live page that it reads **₹299**
+with **no red banner** before sending any traffic.
 
 Complete a registration on the live site, then verify **all five**:
 
@@ -147,6 +165,7 @@ authorises Hostinger to send, or confirmations may land in spam.
 
 | Gap | Impact | Owner |
 |---|---|---|
+| `WEBINAR_PRICE` in `src/lib/config.ts` is currently **1**, not 299 | **Customers would pay ₹1.** Deliberate, for the live smoke test. Revert and rebuild before promoting the page — see §5. | Dev / DevOps |
 | Webhook never exercised | Code is implemented but has never received a real delivery (impossible from localhost). First proof is the §5 smoke test. | DevOps |
 | No successful live payment to date | Every prior live attempt was blocked by §2. The real-money path is unproven until §5 passes. | DevOps |
 | `INTRO_VIDEO_YOUTUBE_ID` empty | Intro video slot unpopulated. | Marketing |

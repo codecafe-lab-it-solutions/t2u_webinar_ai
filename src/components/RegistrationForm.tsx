@@ -208,6 +208,12 @@ export default function RegistrationForm() {
               </p>
             ) : (
               <form onSubmit={handleSubmit} noValidate>
+                {WEBINAR_CONFIG.LIVE_TEST_PRICE_ACTIVE && (
+                  <p className="mb-5 rounded-lg border border-error/40 bg-error/10 p-3 text-sm font-semibold text-error">
+                    LIVE TEST PRICING — this page is charging ₹{WEBINAR_CONFIG.WEBINAR_PRICE} instead of
+                    ₹{WEBINAR_CONFIG.STANDARD_PRICE}. Remove NEXT_PUBLIC_LIVE_TEST_PRICE and rebuild before launch.
+                  </p>
+                )}
                 {WEBINAR_CONFIG.LOCAL_PAYMENT_TEST && !WEBINAR_CONFIG.RAZORPAY_KEY_ID.startsWith("rzp_test_") && (
                   <p className="mb-5 rounded-lg border border-warning/30 bg-warning/10 p-3 text-sm text-warning">
                     Local live payment test — ₹1 will actually be charged.
