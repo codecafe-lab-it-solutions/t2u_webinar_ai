@@ -22,7 +22,7 @@ const STANDARD_PRICE: number = 299;
 const WEBINAR_PRICE: number = STANDARD_PRICE;
 
 export const WEBINAR_CONFIG = {
-  WEBINAR_MODE: "PAID" as "FREE" | "PAID",
+  WEBINAR_MODE: "FREE" as "FREE" | "PAID",
   WEBINAR_PRICE,
   LOCAL_PAYMENT_TEST: localPaymentTest,
   // Follows the price automatically. Drives the warning banners, so reverting
