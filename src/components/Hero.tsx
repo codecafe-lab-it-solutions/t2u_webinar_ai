@@ -81,9 +81,6 @@ export default function Hero() {
                 </>
               ) : (
                 <>
-                  <span className="font-mono text-lg text-text-faint line-through">
-                    ₹{WEBINAR_CONFIG.WEBINAR_REGULAR_PRICE}
-                  </span>
                   <span className="font-mono text-3xl font-extrabold text-gradient-end">FREE</span>
                   <span className="text-sm text-text-muted">आज के लिए</span>
                 </>
